@@ -1,36 +1,170 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Notification System Client
 
-## Getting Started
+A **Next.js frontend application** for testing real-time notifications, CronJob management, and WebSocket systems. This serves as a comprehensive testing interface that demonstrates actual WebSocket usage and real-time functionality.
 
-First, run the development server:
+## 🚀 Features
+
+### Real-time Notification System
+- **System Notifications**: Admin can broadcast messages to all users instantly
+- **User-to-User Messages**: Direct messaging between specific users
+- **Real-time Updates**: All notifications delivered via WebSocket with no page refresh required
+
+### Admin Dashboard
+- **CronJob Management**: Create, start, stop, and delete scheduled tasks
+- **System Administration**: Full control over notification broadcasting
+- **Real-time Monitoring**: Live status updates and activity logging
+
+### Testing Interface
+- **WebSocket Status**: Visual connection indicators (🟢 Connected / 🔴 Disconnected)
+- **Message Tracking**: Timestamp every WebSocket message with activity counters
+- **Live Logging**: Real-time WebSocket message log with JSON formatting
+
+## 🛠 Tech Stack
+
+- **Framework**: Next.js 15 with App Router
+- **UI Components**: shadcn/ui (Radix UI + Tailwind CSS)
+- **WebSocket**: Native WebSocket API (not Socket.IO)
+- **Forms**: React Hook Form with Zod validation
+- **Styling**: Tailwind CSS with CSS variables
+- **Icons**: Lucide React
+- **Date Handling**: date-fns
+
+## 🏃‍♂️ Getting Started
+
+### Prerequisites
+- Node.js 20+
+- Backend notification server running on `http://localhost:5555`
+- WebSocket server available at `ws://localhost:5555/ws`
+
+### Development Setup
 
 ```bash
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# Open browser
+http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Production Build
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Build for production
+npm run build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Start production server
+npm run start
 
-## Learn More
+# Or use Docker
+docker-compose up -d client
+```
 
-To learn more about Next.js, take a look at the following resources:
+## 🐳 Docker Usage
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Production Container
+```bash
+# Run production build (port 6666)
+docker-compose up -d client
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Development Container
+```bash
+# Run development mode with hot reload (port 3000)
+docker-compose --profile dev up -d client-dev
+```
 
-## Deploy on Vercel
+### Build and Run
+```bash
+# Build and start all services
+docker-compose up --build
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Stop all services
+docker-compose down
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📡 API Configuration
+
+The application connects to the backend notification system:
+
+- **API Base URL**: `http://localhost:5555`
+- **WebSocket URL**: `ws://localhost:5555/ws`
+- **Health Check**: Available at `/api/health`
+
+## 👥 Test Users
+
+The system includes three test users from the backend seed data:
+
+- **user1** (admin): alice@example.com - Full admin access
+- **user2** (user): bob@example.com - Standard user
+- **user3** (user): charlie@example.com - Standard user
+
+## 🧪 Testing Scenarios
+
+### 1. System Notification Broadcasting
+1. Open multiple browser tabs/windows
+2. Select different users in each tab
+3. Use admin user to create system notification
+4. Verify all tabs receive notification simultaneously
+
+### 2. User-to-User Messaging
+1. Connect as user1 in one tab
+2. Connect as user2 in another tab
+3. Send user-to-user notification from user1 to user2
+4. Verify user2 receives notification in real-time
+
+### 3. CronJob Status Updates
+1. Connect as admin user
+2. Create, start, or stop a CronJob
+3. Verify real-time status updates in the UI
+4. Check WebSocket activity log for status messages
+
+## 📁 Project Structure
+
+```
+├── app/
+│   ├── admin/          # Admin dashboard
+│   ├── user/[id]/      # User-specific dashboard
+│   ├── api/health/     # Health check endpoint
+│   ├── layout.tsx      # Root layout
+│   └── page.tsx        # User selection home
+├── components/ui/      # shadcn/ui components
+├── lib/               # Utilities
+├── hooks/             # Custom hooks
+├── docker-compose.yml # Container orchestration
+├── Dockerfile         # Production container
+└── Dockerfile.dev     # Development container
+```
+
+## ✅ Success Criteria
+
+The application demonstrates:
+
+- ✅ **Real-time Verification**: Clear visual proof of WebSocket usage
+- ✅ **System Broadcasting**: Notifications sent to everyone simultaneously
+- ✅ **User-specific Delivery**: Messages sent to specific recipients
+- ✅ **Live Status Updates**: CronJob changes appear in real-time
+- ✅ **Message Flow Tracking**: Complete visibility with timestamps
+- ✅ **Zero Refresh Required**: Everything updates without page reload
+
+## 🔧 Development Commands
+
+```bash
+npm run dev          # Development server with Turbopack
+npm run build        # Production build with Turbopack
+npm run start        # Start production server
+npm run lint         # Run ESLint
+```
+
+## 📊 Health Monitoring
+
+The application includes health check endpoints for container monitoring:
+- **Endpoint**: `/api/health`
+- **Response**: JSON with service status and timestamp
+- **Docker Integration**: Used by Docker Compose health checks
+
+---
+
+**Note**: This is the frontend client only. Make sure the backend notification system is running on port 5555 before starting this application.

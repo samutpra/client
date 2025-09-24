@@ -117,10 +117,10 @@ docker-compose up --build
 - **Environment variables**: Configurable API endpoints
 
 ### Port Configuration
-- **Client Production**: Port 5555 (mapped from container port 3000)
+- **Client Production**: Port 6666 (mapped from container port 3000)
 - **Client Development**: Port 3000
-- **Backend**: Port 3001 (external dependency)
-- **WebSocket**: ws://localhost:3001/ws
+- **Backend**: Port 5555 (external dependency)
+- **WebSocket**: ws://localhost:5555/ws
 
 ## Success Criteria
 The application must demonstrate:
