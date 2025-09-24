@@ -9,12 +9,18 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+RUN if [ -f package-lock.json ]; then npm ci --omit=dev; \
+    else npm install --omit=dev; fi
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+
+# Copy package files and install ALL dependencies (including dev) for building
+COPY package.json package-lock.json* ./
+RUN if [ -f package-lock.json ]; then npm ci; \
+    else npm install; fi
+
 COPY . .
 
 # Next.js collects completely anonymous telemetry data about general usage.
