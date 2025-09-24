@@ -20,6 +20,9 @@ import { CalendarIcon } from 'lucide-react'
 export default function AdminDashboard() {
   const router = useRouter()
   const [socket, setSocket] = useState<WebSocket | null>(null)
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5555'
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5555/ws'
   const [isConnected, setIsConnected] = useState(false)
   const [messages, setMessages] = useState<any[]>([])
   const [notifications, setNotifications] = useState<any[]>([])
@@ -67,7 +70,7 @@ export default function AdminDashboard() {
       socket.close()
     }
 
-    const ws = new WebSocket('ws://localhost:3001/ws')
+    const ws = new WebSocket(wsUrl)
     console.log('📡 Admin WebSocket created, waiting for connection...')
 
     ws.onopen = () => {
@@ -154,7 +157,7 @@ export default function AdminDashboard() {
 
   const fetchCronJobs = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/cronjobs')
+      const response = await fetch(`${apiUrl}/api/cronjobs`)
       const data = await response.json()
       setCronJobs(data.cronJobs)
     } catch (error) {
@@ -164,7 +167,7 @@ export default function AdminDashboard() {
 
   const createSystemNotification = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/notifications', {
+      const response = await fetch(`${apiUrl}/api/notifications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -209,7 +212,7 @@ export default function AdminDashboard() {
         finalCronExpression = `${localDateTime.getUTCMinutes()} ${localDateTime.getUTCHours()} ${localDateTime.getUTCDate()} ${localDateTime.getUTCMonth() + 1} *`
       }
 
-      const response = await fetch('http://localhost:3001/api/cronjobs', {
+      const response = await fetch(`${apiUrl}/api/cronjobs`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -240,7 +243,7 @@ export default function AdminDashboard() {
 
   const toggleCronJob = async (jobId: string, action: 'start' | 'stop') => {
     try {
-      const response = await fetch(`http://localhost:3001/api/cronjobs/${jobId}/${action}`, {
+      const response = await fetch(`${apiUrl}/api/cronjobs/${jobId}/${action}`, {
         method: 'POST'
       })
 
@@ -255,7 +258,7 @@ export default function AdminDashboard() {
 
   const deleteCronJob = async (jobId: string) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/cronjobs/${jobId}`, {
+      const response = await fetch(`${apiUrl}/api/cronjobs/${jobId}`, {
         method: 'DELETE'
       })
 
@@ -277,7 +280,7 @@ export default function AdminDashboard() {
 
   const markAllAsRead = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/notifications/mark-all-read/user1', {
+      const response = await fetch(`${apiUrl}/api/notifications/mark-all-read/user1`, {
         method: 'POST'
       })
 

@@ -14,6 +14,9 @@ export default function UserDashboard() {
   const router = useRouter()
   const userId = params.id as string
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5555'
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:5555/ws'
+
   const [user, setUser] = useState<User | null>(null)
   const [socket, setSocket] = useState<WebSocket | null>(null)
   const [isConnected, setIsConnected] = useState(false)
@@ -46,7 +49,7 @@ export default function UserDashboard() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch('http://localhost:3001/')
+        const response = await fetch(apiUrl)
         const data = await response.json()
         const foundUser = data.users.available.find((u: User) => u.id === userId)
         if (foundUser) {
@@ -75,7 +78,7 @@ export default function UserDashboard() {
       socket.close()
     }
 
-    const ws = new WebSocket('ws://localhost:3001/ws')
+    const ws = new WebSocket(wsUrl)
     console.log('📡 WebSocket created, waiting for connection...')
 
     ws.onopen = () => {
@@ -120,7 +123,7 @@ export default function UserDashboard() {
 
   const fetchCronJobs = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/cronjobs')
+      const response = await fetch(`${apiUrl}/api/cronjobs`)
       const data = await response.json()
       setCronJobs(data.cronJobs)
     } catch (error) {
@@ -130,7 +133,7 @@ export default function UserDashboard() {
 
   const createSystemNotification = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/notifications', {
+      const response = await fetch(`${apiUrl}/api/notifications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -153,7 +156,7 @@ export default function UserDashboard() {
 
   const createUserNotification = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/notifications', {
+      const response = await fetch(`${apiUrl}/api/notifications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -178,7 +181,7 @@ export default function UserDashboard() {
 
   const toggleCronJob = async (jobId: string, action: 'start' | 'stop') => {
     try {
-      const response = await fetch(`http://localhost:3001/api/cronjobs/${jobId}/${action}`, {
+      const response = await fetch(`${apiUrl}/api/cronjobs/${jobId}/${action}`, {
         method: 'POST'
       })
 
@@ -200,7 +203,7 @@ export default function UserDashboard() {
 
   const markAllAsRead = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/notifications/mark-all-read/${userId}`, {
+      const response = await fetch(`${apiUrl}/api/notifications/mark-all-read/${userId}`, {
         method: 'POST'
       })
 

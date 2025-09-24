@@ -35,9 +35,15 @@ docker-compose up --build
 ```
 
 ### Key Backend Dependencies
-- **Server**: http://localhost:3001 (notification system backend)
-- **WebSocket**: ws://localhost:3001/ws
-- **API Documentation**: http://localhost:3001/swagger
+- **Server**: http://localhost:5555 (notification system backend)
+- **WebSocket**: ws://localhost:5555/ws
+- **API Documentation**: http://localhost:5555/swagger
+
+### Environment Variables
+- **NEXT_PUBLIC_API_URL**: Backend API base URL (default: http://localhost:5555)
+- **NEXT_PUBLIC_WS_URL**: WebSocket server URL (default: ws://localhost:5555/ws)
+- **NODE_ENV**: Environment mode (development/production)
+- **PORT**: Development server port (default: 3333)
 
 ## Architecture
 
@@ -117,8 +123,8 @@ docker-compose up --build
 - **Environment variables**: Configurable API endpoints
 
 ### Port Configuration
-- **Client Production**: Port 6666 (mapped from container port 3000)
-- **Client Development**: Port 3000
+- **Client Production**: Port 3333
+- **Client Development**: Port 3333
 - **Backend**: Port 5555 (external dependency)
 - **WebSocket**: ws://localhost:5555/ws
 

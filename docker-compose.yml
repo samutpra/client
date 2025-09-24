@@ -1,51 +1,189 @@
 services:
-  # Next.js Frontend Client
+  # Next.js Frontend Client (Production)
   client:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runner
     container_name: notification-client
     ports:
-      - "6666:3000"
+      - "3333:3333"
     environment:
       - NODE_ENV=production
       - NEXT_TELEMETRY_DISABLED=1
-      # Backend API URL (assumes backend runs on host or another container)
+      - PORT=3333
+      - HOSTNAME=0.0.0.0
+      # Backend API Configuration
       - NEXT_PUBLIC_API_URL=http://localhost:5555
       - NEXT_PUBLIC_WS_URL=ws://localhost:5555/ws
+    env_file:
+      - .env
     networks:
       - notification-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3333/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notification-client.rule=Host(`localhost`)"
+      - "traefik.http.services.notification-client.loadbalancer.server.port=3333"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
 
-  # Development service with hot reload (alternative to production build)
+  # Development service with hot reload
   client-dev:
     build:
       context: .
       dockerfile: Dockerfile.dev
+      args:
+        - NODE_ENV=development
     container_name: notification-client-dev
     ports:
-      - "3000:3000"
+      - "3333:3333"
     environment:
       - NODE_ENV=development
       - NEXT_TELEMETRY_DISABLED=1
+      - PORT=3333
+      - HOSTNAME=0.0.0.0
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      # Backend API Configuration
       - NEXT_PUBLIC_API_URL=http://localhost:5555
       - NEXT_PUBLIC_WS_URL=ws://localhost:5555/ws
+    env_file:
+      - .env
     volumes:
       - .:/app
       - /app/node_modules
       - /app/.next
+      - /app/.turbo
     networks:
       - notification-network
     profiles:
       - dev
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3333/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+          cpus: '1.0'
+
+  # Database service (optional - for full stack setup)
+  postgres:
+    image: postgres:16-alpine
+    container_name: notification-postgres
+    environment:
+      POSTGRES_DB: notification_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - notification-network
+    restart: unless-stopped
+    profiles:
+      - database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+        reservations:
+          memory: 128M
+          cpus: '0.25'
+
+  # Redis cache (optional - for session management)
+  redis:
+    image: redis:7-alpine
+    container_name: notification-redis
+    command: redis-server --appendonly yes --replica-read-only no
+    volumes:
+      - redis_data:/data
+    networks:
+      - notification-network
+    restart: unless-stopped
+    profiles:
+      - cache
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+        reservations:
+          memory: 64M
+          cpus: '0.1'
+
+  # Nginx reverse proxy (optional - for production)
+  nginx:
+    image: nginx:alpine
+    container_name: notification-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    networks:
+      - notification-network
+    depends_on:
+      - client
+    restart: unless-stopped
+    profiles:
+      - proxy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: '0.25'
+        reservations:
+          memory: 32M
+          cpus: '0.1'
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
 
 networks:
   notification-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

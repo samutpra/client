@@ -1,26 +1,42 @@
 # Development Dockerfile for hot reload
 FROM node:20-alpine
 
+# Accept build arguments
+ARG NODE_ENV=development
+ARG PORT=3333
+
 # Install dependencies
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat wget
 
 WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install dependencies
+# Install dependencies (include dev dependencies for development)
 RUN npm ci
 
 # Copy source code
 COPY . .
 
 # Expose port
-EXPOSE 3000
+EXPOSE ${PORT}
 
-# Set environment
-ENV NODE_ENV=development
+# Set environment variables
+ENV NODE_ENV=${NODE_ENV}
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=${PORT}
+ENV HOSTNAME=0.0.0.0
+
+# Enable file watching for hot reload in containers
+ENV CHOKIDAR_USEPOLLING=true
+ENV WATCHPACK_POLLING=true
+
+# Create next user for security
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+RUN chown -R nextjs:nodejs /app
+USER nextjs
 
 # Start development server
 CMD ["npm", "run", "dev"]

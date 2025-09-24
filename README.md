@@ -36,6 +36,13 @@ A **Next.js frontend application** for testing real-time notifications, CronJob 
 - Backend notification server running on `http://localhost:5555`
 - WebSocket server available at `ws://localhost:5555/ws`
 
+### Environment Setup
+1. Copy environment template:
+   ```bash
+   cp .env.example .env
+   ```
+2. Update `.env` file with your backend server URLs if different from defaults
+
 ### Development Setup
 
 ```bash
@@ -46,7 +53,7 @@ npm install
 npm run dev
 
 # Open browser
-http://localhost:3000
+http://localhost:3333
 ```
 
 ### Production Build
@@ -64,25 +71,75 @@ docker-compose up -d client
 
 ## 🐳 Docker Usage
 
-### Production Container
+### Basic Commands
+
+#### Production Container
 ```bash
-# Run production build (port 6666)
+# Run production build (port 3333)
 docker-compose up -d client
+
+# With resource monitoring
+docker-compose up -d client && docker stats notification-client
 ```
 
-### Development Container
+#### Development Container
 ```bash
-# Run development mode with hot reload (port 3000)
+# Run development mode with hot reload (port 3333)
 docker-compose --profile dev up -d client-dev
+
+# View development logs
+docker-compose --profile dev logs -f client-dev
 ```
 
-### Build and Run
+#### Build and Management
 ```bash
 # Build and start all services
 docker-compose up --build
 
 # Stop all services
 docker-compose down
+
+# Clean up everything (containers, networks, volumes)
+docker-compose down -v --remove-orphans
+```
+
+### Advanced Usage
+
+#### Full Stack Development
+```bash
+# Run with database and cache
+docker-compose --profile dev --profile database --profile cache up -d
+
+# Run with nginx proxy
+docker-compose --profile proxy up -d
+```
+
+#### Production Deployment
+```bash
+# Production with all services
+docker-compose --profile database --profile cache --profile proxy up -d
+
+# Health check all services
+docker-compose ps --services | xargs -I {} docker-compose exec {} wget -qO- http://localhost/health 2>/dev/null || echo "{} unhealthy"
+```
+
+#### Service Profiles
+- **default**: Basic client service only
+- **dev**: Development mode with hot reload
+- **database**: PostgreSQL database service
+- **cache**: Redis cache service
+- **proxy**: Nginx reverse proxy
+
+#### Resource Management
+```bash
+# Monitor resource usage
+docker-compose top
+
+# Scale services (if needed)
+docker-compose up -d --scale client=2
+
+# View service logs
+docker-compose logs -f client
 ```
 
 ## 📡 API Configuration

@@ -16,10 +16,12 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
 
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5555'
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await fetch('http://localhost:3001/')
+        const response = await fetch(`${apiUrl}`)
         const data = await response.json()
         setUsers(data.users.available)
       } catch (error) {
