@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Next.js Frontend Client
+  client:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: notification-client
+    ports:
+      - "6666:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_TELEMETRY_DISABLED=1
+      # Backend API URL (assumes backend runs on host or another container)
+      - NEXT_PUBLIC_API_URL=http://localhost:5555
+      - NEXT_PUBLIC_WS_URL=ws://localhost:5555/ws
+    networks:
+      - notification-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development service with hot reload (alternative to production build)
+  client-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: notification-client-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - NEXT_PUBLIC_API_URL=http://localhost:5555
+      - NEXT_PUBLIC_WS_URL=ws://localhost:5555/ws
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - notification-network
+    profiles:
+      - dev
+    restart: unless-stopped
+
+networks:
+  notification-network:
+    driver: bridge

@@ -1,183 +1,133 @@
-# Notification System Client - Testing Interface
+# CLAUDE.md
 
-## Requirement
-Create UI Interface for testing Real-time Notification, CronJob and WebSocket systems
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-**IMPORTANT**: Must demonstrate actual WebSocket usage and real-time functionality
+## Project Overview
 
-## Tech Stack (Use existing)
-- **Frontend**: Next.js
-- **WebSocket**: Native WebSocket API
-- **HTTP Client**: fetch API
+This is a **Notification System Client** - a Next.js frontend application for testing real-time notifications, CronJob management, and WebSocket systems. It serves as a testing interface that demonstrates actual WebSocket usage and real-time functionality.
 
-## UI Components Required
+## Commands
 
-### 1. WebSocket Connection Panel
-- **Connection Status**: Display connection state (Connected/Disconnected)
-- **User Registration**: Input field for userId + Connect button
-- **Real-time Log**: Display received WebSocket messages (scrollable)
-- **Connection Info**: Show timestamp of connection
-
-### 2. Notification Testing Panel
-
-#### Create System Notification
-```jsx
-// Form fields:
-- Title (text input)
-- Message (textarea)
-- Type (select: info, warning, success, error)
-- Scheduled At (datetime input - optional)
+### Development
+```bash
+npm run dev        # Start development server with Turbopack
+npm run build      # Build for production with Turbopack
+npm run start      # Start production server
+npm run lint       # Run ESLint
 ```
 
-#### Create User-to-User Notification
-```jsx
-// Form fields:
-- Recipient User ID (text input)
-- Sender User ID (text input)
-- Title (text input)
-- Message (textarea)
-- Type (select: info, warning, success, error)
-- Scheduled At (datetime input - optional)
+### Docker Commands
+```bash
+# Production build and run
+docker-compose up -d client
+
+# Development mode with hot reload
+docker-compose --profile dev up -d client-dev
+
+# Build and run both services
+docker-compose up -d
+
+# Stop all services
+docker-compose down
+
+# Rebuild containers
+docker-compose up --build
 ```
 
-### 3. Real-time Notification Display
-- **Notification Cards**: Display notifications received via WebSocket
-- **Auto-scroll**: Latest notifications appear at top
-- **Mark as Read**: Button to mark notification as read
-- **Timestamp**: Show when notification was received
+### Key Backend Dependencies
+- **Server**: http://localhost:3001 (notification system backend)
+- **WebSocket**: ws://localhost:3001/ws
+- **API Documentation**: http://localhost:3001/swagger
 
-### 4. CronJob Management Panel (Admin)
+## Architecture
 
-#### List CronJobs
-- **Table View**: Display name, expression, status, type
-- **Real-time Status**: Update status via WebSocket
-- **Action Buttons**: Start, Stop, Edit, Delete
+### App Router Structure
+- `/` - User selection home page (fetches available users from backend)
+- `/admin` - Full-featured admin dashboard for system notifications and CronJob management
+- `/user/[id]` - User-specific dashboard for notifications and user-to-user messaging
 
-#### Create CronJob
-```jsx
-// Form fields:
-- Name (text input)
-- Description (textarea)
-- Cron Expression (text input with helper)
-- Job Type (select: notification_check, daily_summary, custom)
-- Job Data (textarea - JSON)
-- Is Active (checkbox)
-```
+### Core Components
+- **WebSocket Integration**: All pages auto-connect to WebSocket for real-time updates
+- **Notification System**: Supports both system-wide and user-to-user notifications
+- **CronJob Management**: Admin interface for creating, managing, and monitoring scheduled tasks
+- **Real-time Activity**: Live WebSocket message logging and notification display
 
-### 5. WebSocket Message Monitor
-- **Raw Messages**: Display WebSocket messages as JSON
-- **Message Filter**: Filter messages by type
-- **Export Log**: Download WebSocket log
+### UI Framework
+- **shadcn/ui components** (New York style with Radix UI primitives)
+- **Tailwind CSS** with `@/` path aliases
+- **Lucide React** icons
+- **React Hook Form** with Zod validation
+- **date-fns** for date handling
 
-## Key Features Required
+### Key Features
 
-### Real-time Verification
-1. **Visual Indicators**:
-   - 🟢 Connected to WebSocket
-   - 🔴 Disconnected
-   - 🟡 Connecting
+#### Real-time Verification System
+1. **Visual connection indicators**: 🟢 Connected / 🔴 Disconnected / 🟡 Connecting
+2. **Message tracking**: Timestamps on every WebSocket message
+3. **Activity counters**: Track WebSocket message count and notification count
+4. **Live updates**: No page refresh required for any functionality
 
-2. **Message Tracking**:
-   - Show timestamp of every WebSocket message
-   - Show difference between HTTP response and WebSocket message
-   - Show count of notifications received via WebSocket
+#### Testing Scenarios Supported
+1. **System Notification Broadcasting**: Admin can send to all users simultaneously
+2. **User-to-User Notifications**: Direct messaging between specific users
+3. **CronJob Status Updates**: Real-time status changes for scheduled tasks
 
-3. **Real-time Updates**:
-   - Notifications created via form must appear in real-time display immediately
-   - CronJob status changes must update in real-time
-   - No page refresh required
+### Data Flow
+1. **User Selection** → Fetch available users from `/` API endpoint
+2. **WebSocket Connection** → Auto-register with userId for targeted messaging
+3. **Real-time Updates** → All notifications and status changes arrive via WebSocket
+4. **Activity Logging** → All WebSocket messages logged with timestamps
 
-### Testing Scenarios
+### Test Users (from backend seed data)
+- **user1** (admin): alice@example.com - Full admin access
+- **user2** (user): bob@example.com - Standard user
+- **user3** (user): charlie@example.com - Standard user
 
-#### Scenario 1: System Notification Broadcasting
-1. Connect WebSocket with multiple userIds (open multiple tabs)
-2. Create System Notification
-3. All tabs must receive notification simultaneously
+## Development Notes
 
-#### Scenario 2: User-to-User Notification
-1. Connect WebSocket with userId = "user1"
-2. Create User-to-User notification sent to "user1"
-3. Must receive notification via WebSocket
+### WebSocket Implementation
+- Uses native WebSocket API (not Socket.IO)
+- Auto-reconnection logic for connection stability
+- Message type handling for notifications, status updates, and system messages
+- Registration system using userId for targeted messaging
 
-#### Scenario 3: CronJob Status Updates
-1. Connect WebSocket with admin user
-2. Start/Stop CronJob
-3. Must receive cronjob_status message immediately
+### Form Management
+- React Hook Form for complex forms (admin CronJob creation)
+- Simple useState for basic notification forms
+- Zod validation for data integrity
+- Date/time pickers for scheduling functionality
 
-## UI Layout
-```
-┌─ Navigation Bar ─────────────────────────────────┐
-├─ WebSocket Connection Panel (always on top)      │
-├─ Tabs: [Notifications] [CronJobs] [Monitor]      │
-├─ Tab Content Area:                               │
-│  ┌─ Left Panel (40%) ──┐ ┌─ Right Panel (60%) ─┐│
-│  │ Create Forms        │ │ Real-time Display   ││
-│  │ - System Noti       │ │ - Notification List ││
-│  │ - User-to-User Noti │ │ - WebSocket Log     ││
-│  │ - CronJob Form      │ │ - Status Updates    ││
-│  └─────────────────────┘ └─────────────────────┘│
-└─ Footer: API Status, Total Messages, Timestamp ─┘
-```
+### Real-time State Management
+- Local state management with useState/useEffect
+- WebSocket message handlers update UI immediately
+- Separate state for notifications, messages, and connection status
+- Auto-scroll behavior for message logs
 
-## Implementation Guide
+## Docker Configuration
 
-### 1. WebSocket Hook
-```jsx
-// hooks/useWebSocket.js
-const useWebSocket = (userId) => {
-  const [socket, setSocket] = useState(null)
-  const [messages, setMessages] = useState([])
-  const [isConnected, setIsConnected] = useState(false)
+### Container Services
+- **client** (production): Optimized Next.js build with standalone output
+- **client-dev** (development): Hot reload development environment
 
-  // Connect, disconnect, send message functions
-  // Message handler for different types
-  // Return socket state and functions
-}
-```
+### Docker Features
+- **Multi-stage builds**: Optimized production images
+- **Health checks**: Container health monitoring via `/api/health`
+- **Volume mounting**: Development mode with live code updates
+- **Network isolation**: Custom bridge network for service communication
+- **Environment variables**: Configurable API endpoints
 
-### 2. API Functions
-```jsx
-// api/notifications.js
-export const createSystemNotification = (data) => fetch(...)
-export const createUserNotification = (data) => fetch(...)
-export const getUserNotifications = (userId) => fetch(...)
-
-// api/cronjobs.js
-export const getCronJobs = () => fetch(...)
-export const createCronJob = (data) => fetch(...)
-export const updateCronJob = (id, data) => fetch(...)
-```
-
-### 3. Main Components
-- `components/WebSocketPanel.jsx`
-- `components/NotificationForm.jsx`
-- `components/NotificationDisplay.jsx`
-- `components/CronJobManager.jsx`
-- `components/MessageMonitor.jsx`
+### Port Configuration
+- **Client Production**: Port 5555 (mapped from container port 3000)
+- **Client Development**: Port 3000
+- **Backend**: Port 3001 (external dependency)
+- **WebSocket**: ws://localhost:3001/ws
 
 ## Success Criteria
-✅ **Real-time Verification**: Clearly show WebSocket is being used
-✅ **System Broadcasting**: Notification sent to everyone simultaneously
-✅ **User-specific**: User-to-user notification sent to specific person
-✅ **CronJob Status**: Real-time status updates for admin
-✅ **Message Tracking**: See timestamp and message flow
-✅ **No Refresh Required**: Everything updates in real-time
-
-## Testing Checklist
-- [ ] WebSocket connection/disconnection works
-- [ ] System notification broadcast to everyone
-- [ ] User-to-user notification sent to specific person
-- [ ] CronJob CRUD operations have real-time feedback
-- [ ] Message log shows WebSocket activity
-- [ ] UI responsive and easy to use
-- [ ] Error handling for WebSocket disconnect
-
-## API Endpoints (Reference)
-- **Server**: `http://localhost:3001`
-- **WebSocket**: `ws://localhost:3001/ws`
-- **Docs**: `http://localhost:3001/swagger`
-
-### Test Users (from seed data)
-- **user1** (admin): alice@example.com
-- **user2** (user): bob@example.com
-- **user3** (user): charlie@example.com
+The application must demonstrate:
+- ✅ Clear visual proof that WebSocket is being used (connection status, message counts)
+- ✅ System notifications broadcast to all connected users instantly
+- ✅ User-to-user notifications delivered to specific recipients
+- ✅ CronJob status updates appear in real-time for admin users
+- ✅ Complete message flow visibility with timestamps
+- ✅ No page refreshes required for any real-time functionality
+- to memorize
